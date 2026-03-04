@@ -2,17 +2,31 @@ use reqwest::blocking::Response;
 use reqwest;
 use urlencoding::encode;
 
+use serde_json::{Error};
+
+#[derive(Debug, serde::Deserialize)]
 pub struct Lever {
     pub name: String,
     state: bool,
-    spring_return: bool
+    springReturn: bool
 }
 
 // create
 impl Lever {
     pub fn new(name: String, state: bool, spring_return: bool) -> Lever{
-        Lever { name, state, spring_return }
+        Lever { name, state, springReturn: spring_return }
     }
+
+    pub fn from_json(json: String) -> Result<Lever, Error>{
+        use serde_json::Result;
+        let mut parser = || -> Result<Lever>{
+            let lever = serde_json::from_str(&json)?;
+            Ok(lever)
+        };
+        let lever = parser();
+        lever
+    }
+    
 }
 
 // get & set
@@ -32,7 +46,7 @@ impl Lever{
         let resp = reqwest::blocking::get(url);
         match resp {
             Ok(x) => {
-                if !self.spring_return{
+                if !self.springReturn{
                 self.state = state;
             }
                 Ok(x)
@@ -56,18 +70,29 @@ impl Lever{
     }
 
     pub fn spring_return(&self) -> bool{
-        self.spring_return
+        self.springReturn
+    }
+}
+
+impl PartialEq for Lever{
+    fn eq(&self, other: &Self) -> bool {
+        if self.name == other.name && self.springReturn == other.springReturn && self.state == other.state {
+            return true
+        }
+        else{
+            return false
+        }
     }
 }
 
 
 
-
 #[cfg(test)]
-mod tests {
+mod api_tests {
     use super::*;
     
     // IMPORTANT - when testing, you must have a http lever named 'rust-test'
+    #[ignore]
     #[test]
     fn turn_on() {
         let mut lever = Lever::new(String::from("rust-test"), false, false);
@@ -76,6 +101,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn turn_off() {
         let mut lever = Lever::new(String::from("rust-test"), false, false);
         let response = lever.set_state(false).unwrap().status();
@@ -83,6 +109,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn turn_on_spring_return() {
         let mut lever = Lever::new(String::from("rust-test"), false, true);
         let response = lever.set_state(true).unwrap().status();
@@ -90,9 +117,21 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn set_color() {
         let lever = Lever::new(String::from("rust-test"), false, false);
         let response = lever.set_color(String::from("ff2233")).unwrap().status();
         assert!(response == reqwest::StatusCode::OK)
+    }
+
+}
+
+#[cfg(test)]
+mod non_api_tests{
+    use super::*;
+    #[test]
+    fn load_json() {
+        let lever = Lever::from_json(String::from("{\"name\":\"test\",\"state\":false,\"springReturn\":false}"));
+        assert!(lever.unwrap() == Lever::new(String::from("test"), false, false))
     }
 }
