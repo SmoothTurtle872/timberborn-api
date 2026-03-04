@@ -66,5 +66,33 @@ impl Lever{
 #[cfg(test)]
 mod tests {
     use super::*;
+    
+    // IMPORTANT - when testing, you must have a http lever named 'rust-test'
+    #[test]
+    fn turn_on() {
+        let mut lever = Lever::new(String::from("rust-test"), false, false);
+        let response = lever.set_state(true).unwrap().status();
+        assert!(response == reqwest::StatusCode::OK && lever.state)
+    }
 
+    #[test]
+    fn turn_off() {
+        let mut lever = Lever::new(String::from("rust-test"), false, false);
+        let response = lever.set_state(false).unwrap().status();
+        assert!(response == reqwest::StatusCode::OK && !lever.state)
+    }
+
+    #[test]
+    fn turn_on_spring_return() {
+        let mut lever = Lever::new(String::from("rust-test"), false, true);
+        let response = lever.set_state(true).unwrap().status();
+        assert!(response == reqwest::StatusCode::OK && !lever.state)
+    }
+
+    #[test]
+    fn set_color() {
+        let lever = Lever::new(String::from("rust-test"), false, false);
+        let response = lever.set_color(String::from("ff2233")).unwrap().status();
+        assert!(response == reqwest::StatusCode::OK)
+    }
 }
