@@ -18,13 +18,12 @@ impl Lever {
     }
 
     pub fn from_json(json: String) -> Result<Lever, Error>{
-        use serde_json::Result;
-        let mut parser = || -> Result<Lever>{
-            let lever = serde_json::from_str(&json)?;
-            Ok(lever)
-        };
-        let lever = parser();
-        lever
+        let lever = serde_json::from_str(&json)?;
+        Ok(lever)
+    }
+
+    pub fn from_json_array(json: String) -> Result<Vec<Result<Lever,Error>>,Error>{
+        todo!()
     }
     
 }
