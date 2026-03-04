@@ -1,7 +1,6 @@
-use std::error::Error;
-
 use reqwest::blocking::Response;
 use reqwest;
+use urlencoding::encode;
 
 pub struct Lever {
     pub name: String,
@@ -23,8 +22,6 @@ impl Lever{
     }
 
     pub fn set_state(&mut self, state: bool) -> Result<Response, &str> {
-        use urlencoding::encode;
-
         let url: String;
         if state{
             url = format!("http://localhost:8080/api/switch-on/{}", encode(&self.name));
@@ -34,12 +31,28 @@ impl Lever{
         }
         let resp = reqwest::blocking::get(url);
         match resp {
+            Ok(x) => {
+                if !self.spring_return{
+                self.state = state;
+            }
+                Ok(x)
+            },
+            Err(_) => Err("Found Error")
+        }
+
+    }
+
+    pub fn toggle(&mut self) -> Result<Response, &str>{
+        self.set_state(!self.state)
+    }
+
+    pub fn set_color(&self, color: String) -> Result<Response, &str>{
+        let url = format!("http://localhost:8080/api/color/{}/{}", encode(&self.name), color);
+        let resp = reqwest::blocking::get(url);
+        match resp {
             Ok(x) => Ok(x),
             Err(_) => Err("Found Error")
         }
-        
-
-
     }
 
     pub fn spring_return(&self) -> bool{
